@@ -18,9 +18,22 @@ const app = express();
 // Security middleware
 app.use(helmet());
 
-// CORS
+// CORS - Allow multiple origins
+const allowedOrigins = [
+  env.FRONTEND_URL,
+  'http://localhost:3000',
+  'https://localhost:3000',
+].filter(Boolean);
+
 app.use(cors({
-  origin: env.FRONTEND_URL,
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin) || origin.includes('vercel.app')) {
+      return callback(null, true);
+    }
+    callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
